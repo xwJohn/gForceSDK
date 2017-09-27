@@ -129,6 +129,11 @@ namespace gf
 		*Notification format: Response status(1 byte) + cmd type(1 byte) + Response parameter(depends on cmd type)*/
 		virtual void onControlResponseReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data) override;
 
+		/*Characteristic notify from device that support OAD protocol*/
+		virtual void onOADFailedReceived(GF_UINT16 handle) override;
+		virtual void onOADBlockRequestReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data) override;
+		virtual void onOADFastRequestReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data) override;
+		
 		virtual void onComDestory() override;
 
 	protected:
@@ -145,7 +150,7 @@ namespace gf
 			AttributeHandle attribute_handle, GF_UINT8 data_length, GF_PUINT8 data) override;
 		virtual GF_RET_CODE readCharacteristic(BLEDevice& dev, AttributeHandle attribute_handle) override;
 		virtual GF_RET_CODE getProtocol(BLEDevice& dev, DeviceProtocolType& type) override;
-		virtual GF_RET_CODE sendControlCommand(BLEDevice& dev, GF_UINT8 data_length, GF_PUINT8 data) override;
+		virtual GF_RET_CODE sendControlCommand(BLEDevice& dev, ProfileCharType type, GF_UINT8 data_length, GF_PUINT8 data) override;
 		virtual void notifyOrientationData(BLEDevice& dev, const Quaternion& rotation) override;
 		virtual void notifyGestureData(BLEDevice& dev, Gesture gest) override;
 		virtual void notifyDeviceStatusChanged(BLEDevice& dev, DeviceStatus status) override;

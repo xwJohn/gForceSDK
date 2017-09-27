@@ -65,8 +65,7 @@ namespace gf
 		virtual ~SimpleProfile() {}
 
 	protected:
-		virtual void onData(GF_UINT8 length, GF_PUINT8 data) override;
-		virtual void onResponse(GF_UINT8 length, GF_PUINT8 data) override;
+		virtual void onCharNotify(ProfileCharType type, GF_UINT8 length, GF_PUINT8 data) override;
 		virtual void onDeviceStatus(DeviceConnectionStatus oldStatus, DeviceConnectionStatus newStatus) override;
 		virtual gfsPtr<DeviceSetting> getDeviceSetting() override;
 

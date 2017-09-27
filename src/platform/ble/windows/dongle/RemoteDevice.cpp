@@ -161,6 +161,9 @@ GF_CRemoteDevice::GF_CRemoteDevice(GF_CNpiInterface* minterface, GF_UINT8 addr_t
 
 	mDeviceProtocolType = ProtocolType_Invalid;
 	mControlCommandHandle = INVALID_HANDLE;
+	mOADIdenfityHandle = INVALID_HANDLE;
+	mOADBlockHandle = INVALID_HANDLE;
+	mOADFastHandle = INVALID_HANDLE;
 }
 
 GF_CRemoteDevice::~GF_CRemoteDevice()
@@ -1585,6 +1588,50 @@ GF_STATUS GF_CRemoteDevice::SendControlCommand(GF_UINT8 data_length, GF_PUINT8 d
 	}
 }
 
+GF_STATUS GF_CRemoteDevice::SendOADIdentify(GF_UINT8 data_length, GF_PUINT8 data)
+{
+	LOGDEBUG(mTag, "SendOADIdentify");
+	if (mCommandQueue != NULL)
+	{
+		mCommandQueue->Enqueue(GATT_TYPE_SEND_OAD_IDENTIFY, data_length, data);
+		return GF_OK;
+	}
+	else
+	{
+		LOGWARNING(mTag, "mCommandQueue is NULL!!!");
+		return GF_FAIL;
+	}
+}
+
+GF_STATUS GF_CRemoteDevice::SendOADBlock(GF_UINT8 data_length, GF_PUINT8 data)
+{
+	LOGDEBUG(mTag, "SendOADBlock");
+	if (mCommandQueue != NULL)
+	{
+		mCommandQueue->Enqueue(GATT_TYPE_SEND_OAD_BLOCK, data_length, data);
+		return GF_OK;
+	}
+	else
+	{
+		LOGWARNING(mTag, "mCommandQueue is NULL!!!");
+		return GF_FAIL;
+	}
+}
+
+GF_STATUS GF_CRemoteDevice::SendOADBlockFast(GF_UINT8 data_length, GF_PUINT8 data)
+{
+	LOGDEBUG(mTag, "SendOADBlockFast");
+	if (mCommandQueue != NULL)
+	{
+		mCommandQueue->Enqueue(GATT_TYPE_SEND_OAD_FAST, data_length, data);
+		return GF_OK;
+	}
+	else
+	{
+		LOGDEBUG(mTag, "SendOADBlockFast is NULL!!!");
+		return GF_FAIL;
+	}
+}
 GF_STATUS GF_CRemoteDevice::SendControlCommandInternal(GF_UINT8 data_length, GF_PUINT8 data)
 {
 	LOGDEBUG(mTag, "SendControlCommandInternal");
@@ -1598,6 +1645,47 @@ GF_STATUS GF_CRemoteDevice::SendControlCommandInternal(GF_UINT8 data_length, GF_
 	}
 }
 
+GF_STATUS GF_CRemoteDevice::SendOADIdentifyInternal(GF_UINT8 data_length, GF_PUINT8 data)
+{
+	LOGDEBUG(mTag, "SendOADIdentifyInternal");
+	if (mInterface != NULL && mState == GF_DEVICE_STATE_CONNECTED && mOADIdenfityHandle != INVALID_HANDLE)
+	{
+		return mInterface->WriteCharacValue(mHandle, mOADIdenfityHandle, data, data_length);
+	}
+	else
+	{
+		LOGWARNING(mTag, "SendOADIdentifyInternal fail\n");
+		return GF_FAIL;
+	}
+}
+
+GF_STATUS GF_CRemoteDevice::SendOADBlockInternal(GF_UINT8 data_length, GF_PUINT8 data)
+{
+	LOGDEBUG(mTag, "SendOADBlockInternal");
+	if (mInterface != NULL && mState == GF_DEVICE_STATE_CONNECTED && mOADBlockHandle != INVALID_HANDLE)
+	{
+		return mInterface->WriteCharacValue(mHandle, mOADBlockHandle, data, data_length);
+	}
+	else
+	{
+		LOGWARNING(mTag, "SendOADBlockInternal fail");
+		return GF_FAIL;
+	}
+}
+
+GF_STATUS GF_CRemoteDevice::SendOADFastInternal(GF_UINT8 data_length, GF_PUINT8 data)
+{
+	LOGDEBUG(mTag, "SendOADFastInternal");
+	if (mInterface != NULL && mState == GF_DEVICE_STATE_CONNECTED && mOADFastHandle != INVALID_HANDLE)
+	{
+		return mInterface->WriteCharacValue(mHandle, mOADFastHandle, data, data_length);
+	}
+	else
+	{
+		LOGWARNING(mTag, "SendOADBlockInternal fail");
+		return GF_FAIL;
+	}
+}
 GF_STATUS GF_CRemoteDevice::ConnectionParameterUpdateRequest(GF_UINT16 conn_interval_min, GF_UINT16 conn_interval_max, GF_UINT16 slave_latence, GF_UINT16 supervision_timeout)
 {
 	if (mInterface != NULL && mState == GF_DEVICE_STATE_CONNECTED)
@@ -1680,8 +1768,53 @@ GF_VOID GF_CRemoteDevice::CheckProtocolType()
 		}
 		else if ((service->mUUID.type == GF_UUID_128) && (0 == memcmp(GFORCE_OAD_SERVICE_UUID, service->mUUID.value.uuid128, UUID_128_LENGTH)))
 		{
-			mDeviceProtocolType = ProtocolType_OADService;
-			return;
+			LOGDEBUG(mTag, "GFORCE_OAD_SERVICE_UUID found with character num %d\n", service->mNumOfCharacteristic);
+			GF_UUID oad_server_uuid;
+			oad_server_uuid.type = GF_UUID_128;
+			memcpy(oad_server_uuid.value.uuid128, GFORCE_OAD_SERVICE_UUID, UUID_128_LENGTH);
+	
+			GF_UUID oad_identify_char_uuid;
+			GF_CCharacteristic* identify_char;
+			oad_identify_char_uuid.type = GF_UUID_128;
+			memcpy(oad_identify_char_uuid.value.uuid128, GFORCE_OAD_IDENTIFY_CHAR_UUID, UUID_128_LENGTH);
+			identify_char = service->FindCharacteristicbyUUID(oad_identify_char_uuid);
+			if (identify_char == NULL)
+			{
+				LOGDEBUG(mTag, "oad_identify_characteristic is NULL\n");
+			}
+
+			GF_UUID oad_block_char_uuid;
+			GF_CCharacteristic* block_char;
+			oad_block_char_uuid.type = GF_UUID_128;
+			memcpy(oad_block_char_uuid.value.uuid128, GFORCE_OAD_BLOCK_CHAR_UUID, UUID_128_LENGTH);
+			block_char = service->FindCharacteristicbyUUID(oad_block_char_uuid);
+			if (block_char == NULL)
+			{
+				LOGDEBUG(mTag, "oad_block_characteristic is NULL\n");
+			}
+
+			GF_UUID oad_fast_char_uuid;
+			GF_CCharacteristic* fast_char;
+			oad_fast_char_uuid.type = GF_UUID_128;
+			memcpy(oad_fast_char_uuid.value.uuid128, GFORCE_OAD_FAST_CHAR_UUID, UUID_128_LENGTH);
+			fast_char = service->FindCharacteristicbyUUID(oad_fast_char_uuid);
+			if (fast_char == NULL)
+			{
+				LOGDEBUG(mTag, "oad_fast_characteristic is NULL\n");
+			}
+			
+			if ((NULL != identify_char) &&
+			(NULL != block_char)){
+				LOGDEBUG(mTag, "mDeviceProtocolType found (OAD)\n");
+				mDeviceProtocolType = ProtocolType_OADService;
+				mOADIdenfityHandle = identify_char->mValueHandle;
+				mOADBlockHandle = block_char->mValueHandle;
+				if(NULL != fast_char){
+					LOGDEBUG(mTag, "Fast mode has been supported\n");
+					mOADFastHandle = fast_char->mValueHandle;
+				}
+				return;
+			}
 		}
 		else if ((service->mUUID.type == GF_UUID_16) && (service->mUUID.value.uuid16 == GFORCE_SIMPLE_PROTOCOL_SERVICE_UUID))
 		{

@@ -73,12 +73,13 @@ namespace gf
 		~BLEDataProfile4();
 
 	protected:
-		virtual void onData(GF_UINT8 length, GF_PUINT8 data) override;
-		virtual void onResponse(GF_UINT8 length, GF_PUINT8 data) override;
+		virtual void onCharNotify(ProfileCharType type, GF_UINT8 length, GF_PUINT8 data) override;
 		virtual void onDeviceStatus(DeviceConnectionStatus oldStatus, DeviceConnectionStatus newStatus) override;
 		virtual gfsPtr<DeviceSetting> getDeviceSetting() override;
 
 	private:
+		void onData(GF_UINT8 length, GF_PUINT8 data);
+		void onResponse(GF_UINT8 length, GF_PUINT8 data);
 		void onAccelerateData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data);
 		void onGyroscopeData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data);
 		void onMagnetometerData(BLEDevice& device, GF_UINT8 length, GF_PUINT8 data);

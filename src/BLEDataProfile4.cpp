@@ -47,6 +47,21 @@ BLEDataProfile4::~BLEDataProfile4()
 
 #define ATTRIB_HANDLE_GEVENT_V4 (0x22)
 
+void BLEDataProfile4::onCharNotify(ProfileCharType type, GF_UINT8 length, GF_PUINT8 data){
+	if (type == ProfileCharType::PROF_DATA_CMD)
+	{
+		this->onResponse(length, data);
+	}
+	else if (type == ProfileCharType::PROF_DATA_NTF)
+	{
+		this->onData(length, data);
+	}
+	else
+	{
+		GF_LOGE("Unknown profile char type: %d\n", type);
+	}
+}
+
 void BLEDataProfile4::onData(GF_UINT8 length, GF_PUINT8 data)
 {
 	//GF_LOGD("%s", __FUNCTION__);

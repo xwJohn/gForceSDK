@@ -46,7 +46,7 @@ using namespace gf;
 	do {	\
 		gfsPtr<decltype(cb)> pcb = make_shared<decltype(cb)>(cb);	\
 		gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);	\
-		retval = sendCommand((length), (buf), true, pvoid);	\
+		retval = sendCommand(ProfileCharType::PROF_DATA_CMD, (length), (buf), true, pvoid);	\
 	} while (false)
 
 #define DO_SEND_COMMAND_AND_CALLBACK(length, buf)	\
@@ -414,19 +414,19 @@ GF_RET_CODE DeviceSettingDataProfile4::powerOff()
 {
 	GF_LOGD(__FUNCTION__);
 	GF_UINT8 data = CMD_POWEROFF;
-	return sendCommand(1, &data);
+	return sendCommand(ProfileCharType::PROF_DATA_CMD, 1, &data);
 }
 GF_RET_CODE DeviceSettingDataProfile4::swithToOAD()
 {
 	GF_LOGD(__FUNCTION__);
 	GF_UINT8 data = CMD_SWITCH_TO_OAD;
-	return sendCommand(1, &data);
+	return sendCommand(ProfileCharType::PROF_DATA_CMD, 1, &data);
 }
 GF_RET_CODE DeviceSettingDataProfile4::systemReset()
 {
 	GF_LOGD(__FUNCTION__);
 	GF_UINT8 data = CMD_SYSTEM_RESET;
-	return sendCommand(1, &data);
+	return sendCommand(ProfileCharType::PROF_DATA_CMD, 1, &data);
 }
 
 GF_RET_CODE DeviceSettingDataProfile4::switchService(DeviceService service)
@@ -435,7 +435,7 @@ GF_RET_CODE DeviceSettingDataProfile4::switchService(DeviceService service)
 	GF_UINT8 data[2];
 	data[0] = CMD_SWITCH_SERVICE;
 	data[1] = static_cast<GF_UINT8>(service);
-	return sendCommand(2, data);
+	return sendCommand(ProfileCharType::PROF_DATA_CMD, 2, data);
 }
 
 GF_RET_CODE DeviceSettingDataProfile4::setDataNotifSwitch(DataNotifFlags flags, function<void(ResponseResult res)> cb)
@@ -523,7 +523,7 @@ GF_RET_CODE DeviceSettingDataProfile4::trainingModelSendNextPackage(GF_UINT16 ne
 	auto onResponse = bind(&DeviceSettingDataProfile4::trainingModelOnResponse, this, placeholders::_1, placeholders::_2);
 	gfsPtr<function<void(ResponseResult, GF_UINT16)>> pcb = make_shared<function<void(ResponseResult, GF_UINT16)>>(onResponse);
 	gfsPtr<void> pvoid = static_pointer_cast<void>(pcb);
-	return sendCommand(cmdlen, cmddata, true, pvoid);
+	return sendCommand(ProfileCharType::PROF_DATA_CMD, cmdlen, cmddata, true, pvoid);
 }
 void DeviceSettingDataProfile4::resetTrainingModelData()
 {

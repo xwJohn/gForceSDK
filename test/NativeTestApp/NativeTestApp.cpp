@@ -636,7 +636,7 @@ void handleCmd(gfsPtr<Hub>& pHub, string cmd)
 						GF_LOGD("OAD Progress: resultcode=%s, %u%%", ResponseResultToString(res).c_str(), percentage);
 					});
 					GF_LOGD("OAD result: ret = %u", ret);
-					fclose(pf);
+					//fclose(pf);
 				}
 			}
 		}

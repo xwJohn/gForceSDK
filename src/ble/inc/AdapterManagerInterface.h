@@ -61,7 +61,7 @@ public:
 
 	/*used to get the protocol type that the remote device supported*/
 	virtual GF_DeviceProtocolType GetDeviceProtocolSupported(GF_UINT16 conn_handle) = 0;
-	/*used to send data to control command characteristic of gForce data protocol*/
-	virtual GF_STATUS SendControlCommand(GF_UINT16 conn_handle, GF_UINT8 data_length, GF_PUINT8 data) = 0;
+	/*used to send data to characteristic based on ProfileCharType*/
+	virtual GF_STATUS SendControlCommand(GF_UINT16 conn_handle, ProfileCharType type, GF_UINT8 data_length, GF_PUINT8 data) = 0;
 };
 #endif

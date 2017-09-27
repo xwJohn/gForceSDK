@@ -121,7 +121,7 @@ namespace gf
 			gfsPtr<void> cb;
 		};
 		map<GF_UINT8, CommandHandler> mExecutingList;
-		GF_RET_CODE sendCommand(GF_UINT8 dataLen, GF_PUINT8 commandData, bool hasResponse = false, gfsPtr<void> cb = nullptr);
+		GF_RET_CODE sendCommand(ProfileCharType type, GF_UINT8 dataLen, GF_PUINT8 commandData, bool hasResponse = false, gfsPtr<void> cb = nullptr);
 
 		void updateTimer();
 		void onTimer();

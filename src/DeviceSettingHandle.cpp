@@ -46,7 +46,7 @@ DeviceSettingHandle::~DeviceSettingHandle()
 {
 }
 
-GF_RET_CODE DeviceSettingHandle::sendCommand(GF_UINT8 dataLen, GF_PUINT8 commandData, bool hasResponse, gfsPtr<void> cb)
+GF_RET_CODE DeviceSettingHandle::sendCommand(ProfileCharType type, GF_UINT8 dataLen, GF_PUINT8 commandData, bool hasResponse, gfsPtr<void> cb)
 {
 	if (nullptr == commandData || 0 == dataLen)
 		return GF_RET_CODE::GF_ERROR_BAD_PARAM;
@@ -80,7 +80,7 @@ GF_RET_CODE DeviceSettingHandle::sendCommand(GF_UINT8 dataLen, GF_PUINT8 command
 	}
 
 	// send the command to device
-	GF_RET_CODE ret = dev->sendControlCommand(dataLen, commandData);
+	GF_RET_CODE ret = dev->sendControlCommand(type, dataLen, commandData);
 	if (GF_RET_CODE::GF_SUCCESS != ret)
 	{
 		GF_LOGD("%s: error: command (0x%2.2X) failed.", __FUNCTION__, command);

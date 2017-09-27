@@ -218,4 +218,15 @@ namespace gf {
 		DDT_MAX
 	};
 
+	/// \brief Define the gforce profile characteristic type
+	///
+	enum class ProfileCharType : GF_UINT8 {
+		PROF_SIMPLE_DATA = 0,   //simple profile: data char
+		PROF_DATA_CMD,   //data profile: cmd char
+		PROF_DATA_NTF,   //data profile：nty char
+		PROF_OAD_IDENTIFY, //OAD profile：identify char
+		PROF_OAD_BLOCK,  //OAD profile：block char
+		PROF_OAD_FAST    //OAD profile：fast char
+	};
+
 } // namespace gf

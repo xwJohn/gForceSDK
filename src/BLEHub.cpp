@@ -579,7 +579,7 @@ void BLEHub::onNotificationReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8
 		}
 	}
 	if (nullptr != dev)
-		dev->onData(length, data);
+		dev->onCharNotify(ProfileCharType::PROF_DATA_NTF, length, data);
 }
 
 void BLEHub::onControlResponseReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data)
@@ -597,9 +597,62 @@ void BLEHub::onControlResponseReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUI
 		}
 	}
 	if (nullptr != dev)
-		dev->onResponse(length, data);
+		dev->onCharNotify(ProfileCharType::PROF_DATA_CMD, length, data);
 }
 
+void BLEHub::onOADFailedReceived(GF_UINT16 handle)
+{
+	gfsPtr<BLEDevice> dev;
+	{
+		lock_guard<mutex> lock(mTaskMutex);
+		for (auto& itor : mConnectedDevices)
+		{
+			if (itor->getHandle() == handle)
+			{
+				dev = itor;
+				break;
+			}
+		}
+	}
+	if (nullptr != dev)
+		dev->onCharNotify(ProfileCharType::PROF_OAD_IDENTIFY, 0, nullptr);
+}
+
+void BLEHub::onOADBlockRequestReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data)
+{
+	gfsPtr<BLEDevice> dev;
+	{
+		lock_guard<mutex> lock(mTaskMutex);
+		for (auto& itor : mConnectedDevices)
+		{
+			if (itor->getHandle() == handle)
+			{
+				dev = itor;
+				break;
+			}
+		}
+	}
+	if (nullptr != dev)
+		dev->onCharNotify(ProfileCharType::PROF_OAD_BLOCK, length, data);
+}
+
+void BLEHub::onOADFastRequestReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data)
+{
+	gfsPtr<BLEDevice> dev;
+	{
+		lock_guard<mutex> lock(mTaskMutex);
+		for (auto& itor : mConnectedDevices)
+		{
+			if (itor->getHandle() == handle)
+			{
+				dev = itor;
+				break;
+			}
+		}
+	}
+	if (nullptr != dev)
+		dev->onCharNotify(ProfileCharType::PROF_OAD_FAST, length, data);
+}
 void BLEHub::onComDestory()
 {
 	GF_LOGD(__FUNCTION__);
@@ -787,7 +840,7 @@ GF_RET_CODE BLEHub::getProtocol(BLEDevice& dev, DeviceProtocolType& type)
 		return GF_RET_CODE::GF_ERROR;
 }
 
-GF_RET_CODE BLEHub::sendControlCommand(BLEDevice& dev, GF_UINT8 data_length, GF_PUINT8 data)
+GF_RET_CODE BLEHub::sendControlCommand(BLEDevice& dev, ProfileCharType type, GF_UINT8 data_length, GF_PUINT8 data)
 {
 	auto handle = dev.getHandle();
 	if (nullptr == mAM || INVALID_HANDLE == handle)
@@ -804,10 +857,10 @@ GF_RET_CODE BLEHub::sendControlCommand(BLEDevice& dev, GF_UINT8 data_length, GF_
 	}
 	mLastExecTime = chrono::system_clock::now();
 #endif
-	GF_UINT32 status = executeCommand(make_shared<HubMsg>([this, handle,
+	GF_UINT32 status = executeCommand(make_shared<HubMsg>([this, handle, type,
 		data_length, data]()
 	{
-		GF_STATUS status = mAM->SendControlCommand(handle,
+		GF_STATUS status = mAM->SendControlCommand(handle, type,
 			data_length, data);
 		return static_cast<GF_UINT32>(status);
 	}));

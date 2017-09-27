@@ -415,14 +415,30 @@ GF_DeviceProtocolType GF_CAdapterManager::GetDeviceProtocolSupported(GF_UINT16 c
 	return ProtocolType;
 }
 
-GF_STATUS GF_CAdapterManager::SendControlCommand(GF_UINT16 conn_handle, GF_UINT8 data_length, GF_PUINT8 data)
+GF_STATUS GF_CAdapterManager::SendControlCommand(GF_UINT16 conn_handle, ProfileCharType type, GF_UINT8 data_length, GF_PUINT8 data)
 {
 	GF_STATUS result = GF_FAIL;
 	LOGDEBUG(mTag, "SendControlCommand \n");
 	GF_CRemoteDevice* device = GetConnectedDeviceByHandle(conn_handle);
 	if (device != NULL)
 	{
-		result = device->SendControlCommand(data_length, data);
+		switch(type)
+		{
+			case ProfileCharType::PROF_DATA_CMD:
+				result = device->SendControlCommand(data_length, data);
+				break;
+			case ProfileCharType::PROF_OAD_IDENTIFY:
+				result = device->SendOADIdentify(data_length, data);
+				break;
+			case ProfileCharType::PROF_OAD_BLOCK:
+				result = device->SendOADBlock(data_length, data);
+				break;
+			case ProfileCharType::PROF_OAD_FAST:
+				result = device->SendOADBlockFast(data_length, data);
+				break;
+			default:
+				break;
+		}
 	}
 
 	return result;
@@ -671,17 +687,42 @@ GF_STATUS GF_CAdapterManager::OnEvent(GF_UINT32 event, GF_PUINT8 data, GF_UINT16
 					/*for notification from device that support data protocol*/
 					if (ProtocolType_DataProtocol == device->GetProtocolType())
 					{
-						atttibute_handle = data[GFORCE_COMMAND_RESPONSE_HANDLE_OFFSET] + (data[GFORCE_COMMAND_RESPONSE_HANDLE_OFFSET + 1] << 8);
-						GF_UINT8 length = data[GFORCE_COMMAND_RESPONSE_LENGTH_OFFSET];
+						atttibute_handle = data[GFORCE_ATT_RESPONSE_HANDLE_OFFSET] + (data[GFORCE_ATT_RESPONSE_HANDLE_OFFSET + 1] << 8);
+						GF_UINT8 length = data[GFORCE_ATT_RESPONSE_LENGTH_OFFSET];
 						LOGDEBUG(mTag, "--------->notification atttibute_handle = %x! \n", atttibute_handle);
 						/*for control command response*/
 						if ( atttibute_handle == device->GetControlCommandHandle())
 						{
-							mClientCallback->onControlResponseReceived(handle, length - 2, data + GFORCE_COMMAND_RESPONSE_LENGTH_OFFSET + 3);
+							mClientCallback->onControlResponseReceived(handle, length - 2, data + GFORCE_ATT_RESPONSE_DATA_OFFSET);
 						}
 						else
 						{
 							mClientCallback->onNotificationReceived(handle, length, data + 4);
+						}
+					}
+					/*for notification from device that support oad protocol*/
+					else if (ProtocolType_OADService == device->GetProtocolType())
+					{
+						atttibute_handle = data[GFORCE_ATT_RESPONSE_HANDLE_OFFSET] + (data[GFORCE_ATT_RESPONSE_HANDLE_OFFSET + 1] << 8);
+						GF_UINT8 length = data[GFORCE_ATT_RESPONSE_LENGTH_OFFSET];
+						LOGDEBUG(mTag, "--------->notification atttibute_handle = %x! \n", atttibute_handle);
+						/*for OAD Char response*/
+						if ( atttibute_handle == device->GetOADIdentifyHandle())
+						{
+							/*if this char notify received that means oad failed*/
+							mClientCallback->onOADFailedReceived(handle);
+						}
+						else if (atttibute_handle == device->GetOADBlockHandle())
+						{
+							/*if fast mode supported,ignore this char notify*/
+							if(INVALID_HANDLE == device->GetOADFastHandle())
+							{
+								mClientCallback->onOADBlockRequestReceived(handle, length - 2, data + GFORCE_ATT_RESPONSE_DATA_OFFSET);
+							}
+						}
+						else
+						{
+							mClientCallback->onOADFastRequestReceived(handle, length - 2, data + GFORCE_ATT_RESPONSE_DATA_OFFSET);
 						}
 					}
 					else

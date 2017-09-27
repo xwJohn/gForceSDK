@@ -80,7 +80,8 @@ public:
 	GF_CAdapterManagerInterface* GetInstance();
 
 	GF_DeviceProtocolType GetDeviceProtocolSupported(GF_UINT16 conn_handle);
-	GF_STATUS SendControlCommand(GF_UINT16 conn_handle, GF_UINT8 data_length, GF_PUINT8 data);
+	GF_STATUS SendControlCommand(GF_UINT16 conn_handle, ProfileCharType type, GF_UINT8 data_length, GF_PUINT8 data);
+	
 protected:
 	GF_CAdapterManager();
 	~GF_CAdapterManager();

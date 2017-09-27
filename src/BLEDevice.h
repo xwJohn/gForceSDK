@@ -81,8 +81,8 @@ namespace gf
 			GF_UINT16 slave_latence, GF_UINT16 supervision_timeout);
 		virtual GF_RET_CODE writeCharacteristic(AttributeHandle attribute_handle, GF_UINT8 dataLen, GF_PUINT8 data);
 		virtual GF_RET_CODE readCharacteristic(AttributeHandle attribute_handle);
-		virtual GF_RET_CODE sendControlCommand(GF_UINT8 dataLen, GF_PUINT8 data);
-
+		virtual GF_RET_CODE sendControlCommand(ProfileCharType type, GF_UINT8 dataLen, GF_PUINT8 data);
+		
 	public:
 		virtual void updateData(const GF_BLEDevice& bleDev);
 		virtual void onConnected(GF_STATUS status, const GF_ConnectedDevice& connedDevice);
@@ -90,9 +90,7 @@ namespace gf
 		virtual void onMTUSizeChanged(GF_STATUS status, GF_UINT16 mtu_size);
 		virtual void onConnectionParmeterUpdated(GF_STATUS status, GF_UINT16 conn_int, GF_UINT16 superTO, GF_UINT16 slavelatency);
 		virtual void onCharacteristicValueRead(GF_STATUS status, GF_UINT8 length, GF_PUINT8 data);
-		virtual void onData(GF_UINT8 length, GF_PUINT8 data);
-		virtual void onResponse(GF_UINT8 length, GF_PUINT8 data);
-
+		virtual void onCharNotify(ProfileCharType type, GF_UINT8 length, GF_PUINT8 data);
 	public:
 		virtual bool operator < (const BLEDevice& devRight) const;
 		virtual bool isMyself(GF_UINT8 addrType, GF_UINT8 addr[]) const;

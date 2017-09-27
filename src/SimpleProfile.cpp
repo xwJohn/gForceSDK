@@ -60,7 +60,7 @@ void SimpleProfile::timefun()
 #define ATTRIB_HANDLE_GEVENT (0x27)
 #define EVENT_RECENTER_MASK		0x01
 
-void SimpleProfile::onData(GF_UINT8 length, GF_PUINT8 data)
+void SimpleProfile::onCharNotify(ProfileCharType type, GF_UINT8 length, GF_PUINT8 data)
 {
 	gfsPtr<BLEDevice> device = mDevice.lock();
 	if (nullptr == device)
@@ -133,11 +133,6 @@ void SimpleProfile::onData(GF_UINT8 length, GF_PUINT8 data)
 		GF_LOGE("%s: unknown event ID: %2.2X", __FUNCTION__, evtType);
 		;
 	}
-}
-
-void SimpleProfile::onResponse(GF_UINT8 length, GF_PUINT8 data)
-{
-	GF_LOGD("%s: No implementation.", __FUNCTION__);
 }
 
 void SimpleProfile::onDeviceStatus(DeviceConnectionStatus oldStatus, DeviceConnectionStatus newStatus)

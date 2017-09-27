@@ -136,7 +136,7 @@ public:
 				{
 					ControlCommandParameter[i][0] = i;
 					printf("\n SendControlCommand cmd type: %d!\n", ControlCommandParameter[i][0]);
-					if (GF_OK == mAMInterface->SendControlCommand(device->handle, 0x01, ControlCommandParameter[i]))
+					if (GF_OK == mAMInterface->SendControlCommand(device->handle, ProfileCharType::PROF_DATA_CMD, 0x01, ControlCommandParameter[i]))
 					{
 						printf("\n SendControlCommand sucessful!\n");
 					}
@@ -419,7 +419,15 @@ public:
 				printf("unknown command type = %d\n", cmd_type);
 		}
 	}
-
+	void onOADFailedReceived(GF_UINT16 handle)
+	{
+	}
+	void onOADBlockRequestReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data)
+	{
+	}
+	void onOADFastRequestReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data)
+	{
+	}
 private:
 	GF_CAdapterManagerInterface* mAMInterface;
 	list<GF_CDevice*> mAvailabeDevice;

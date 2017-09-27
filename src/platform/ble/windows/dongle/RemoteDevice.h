@@ -166,6 +166,18 @@ public:
 		return mControlCommandHandle;
 	}
 
+	GF_UINT16 GetOADIdentifyHandle()
+	{
+		return mOADIdenfityHandle;
+	}
+	GF_UINT16 GetOADBlockHandle()
+	{
+		return mOADBlockHandle;
+	}
+	GF_UINT16 GetOADFastHandle()
+	{
+		return mOADFastHandle;
+	}
 	GF_VOID Init();
 	GF_VOID DeInit();
 
@@ -195,6 +207,12 @@ public:
 	GF_STATUS ReadCharacteristicValue(GF_UINT16 attribute_handle);
 	GF_STATUS SendControlCommand(GF_UINT8 data_length, GF_PUINT8 data);
 	GF_STATUS SendControlCommandInternal(GF_UINT8 data_length, GF_PUINT8 data);
+	GF_STATUS SendOADIdentify(GF_UINT8 data_length, GF_PUINT8 data);
+	GF_STATUS SendOADBlock(GF_UINT8 data_length, GF_PUINT8 data);
+	GF_STATUS SendOADBlockFast(GF_UINT8 data_length, GF_PUINT8 data);
+	GF_STATUS SendOADIdentifyInternal(GF_UINT8 data_length, GF_PUINT8 data);
+	GF_STATUS SendOADBlockInternal(GF_UINT8 data_length, GF_PUINT8 data);
+	GF_STATUS SendOADFastInternal(GF_UINT8 data_length, GF_PUINT8 data);
 
 	GF_STATUS ExchangeMTUSize(GF_UINT16 mtu_size);
 	GF_STATUS ExchangeMTUSizeInternal(GF_UINT16 mtu_size);
@@ -244,13 +262,20 @@ private:
 	/*indicate the protocpl type the device supported. */
 	GF_DeviceProtocolType mDeviceProtocolType;
 	GF_UINT16 mControlCommandHandle;
-
+	//OAD char handle
+	GF_UINT16 mOADIdenfityHandle;
+	GF_UINT16 mOADBlockHandle;
+	GF_UINT16 mOADFastHandle;
 	GF_CCONTROLCOMMANDQUEUE* mCommandQueue;
 };
 
 #define MAX_COMMAND_PAYLOAD 50
 #define GATT_TYPE_EXCHANGE_MTU_SIZE 0
 #define GATT_TYPE_SEND_CONTROL_COMMAND 1
+//OAD Operate
+#define GATT_TYPE_SEND_OAD_IDENTIFY    2
+#define GATT_TYPE_SEND_OAD_BLOCK       3
+#define GATT_TYPE_SEND_OAD_FAST        4
 class GF_CGATTCommand
 {
 public:
@@ -331,6 +356,14 @@ public:
 			{
 				mDevice->SendControlCommandInternal(data_length, data);
 			}
+			else if (GATT_TYPE_SEND_OAD_IDENTIFY == type)
+			{
+				mDevice->SendOADIdentifyInternal(data_length, data);
+			}
+			else if (GATT_TYPE_SEND_OAD_BLOCK == type)
+			{
+				mDevice->SendOADBlockInternal(data_length, data);
+			}
 			mBusy = GF_TRUE;
 		}
 		else
@@ -339,7 +372,11 @@ public:
 			GF_CGATTCommand* command = new GF_CGATTCommand(type, data_length, data);
 			mCommand.push_back(command);
 		}
-		//printf("Enqueue with mBusy = %d£¬ queue size = %d \n", mBusy, mCommand.size());
+		if (GATT_TYPE_SEND_OAD_FAST == type)
+		{
+			mDevice->SendOADFastInternal(data_length, data);
+		}
+		//printf("Enqueue with mBusy = %dï¼Œ queue size = %d \n", mBusy, mCommand.size());
 		LeaveCriticalSection(&mCommandMutex);
 	}
 
@@ -359,8 +396,16 @@ public:
 			{
 				mDevice->SendControlCommandInternal(command->getDataLength(), command->getData());
 			}
+			else if (GATT_TYPE_SEND_OAD_IDENTIFY == command->getCommandType())
+			{
+				mDevice->SendOADIdentifyInternal(command->getDataLength(), command->getData());
+			}
+			else if (GATT_TYPE_SEND_OAD_BLOCK == command->getCommandType())
+			{
+				mDevice->SendOADBlockInternal(command->getDataLength(), command->getData());
+			}
 			mCommand.pop_front();
-			//printf("Dequeue with mBusy = %d£¬ queue size = %d \n", mBusy, mCommand.size());
+			//printf("Dequeue with mBusy = %dï¼Œ queue size = %d \n", mBusy, mCommand.size());
 			delete command;
 		}
 		else

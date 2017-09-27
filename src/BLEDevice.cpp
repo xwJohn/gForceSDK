@@ -365,13 +365,13 @@ GF_RET_CODE BLEDevice::readCharacteristic(AttributeHandle attribute_handle)
 	return ret;
 }
 
-GF_RET_CODE BLEDevice::sendControlCommand(GF_UINT8 dataLen, GF_PUINT8 data)
+GF_RET_CODE BLEDevice::sendControlCommand(ProfileCharType type, GF_UINT8 dataLen, GF_PUINT8 data)
 {
 	GF_LOGD("%s: command: 0x%2.2X", __FUNCTION__, data[0]);
 	GF_RET_CODE ret = GF_RET_CODE::GF_ERROR_BAD_STATE;
 	if (mHandle != INVALID_HANDLE)
 	{
-		ret = mHub.sendControlCommand(*this, dataLen, data);
+		ret = mHub.sendControlCommand(*this, type, dataLen, data);
 	}
 	return ret;
 }
@@ -416,19 +416,11 @@ void BLEDevice::onCharacteristicValueRead(GF_STATUS status, GF_UINT8 length, GF_
 	// TODO: notify client
 }
 
-void BLEDevice::onData(GF_UINT8 length, GF_PUINT8 data)
+void BLEDevice::onCharNotify(ProfileCharType type, GF_UINT8 length, GF_PUINT8 data)
 {
 	if (nullptr != mProfile)
 	{
-		mProfile->onData(length, data);
-	}
-}
-
-void BLEDevice::onResponse(GF_UINT8 length, GF_PUINT8 data)
-{
-	if (nullptr != mProfile)
-	{
-		mProfile->onResponse(length, data);
+		mProfile->onCharNotify(type, length, data);
 	}
 }
 

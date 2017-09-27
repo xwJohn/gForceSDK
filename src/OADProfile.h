@@ -34,6 +34,14 @@
 
 namespace gf
 {
+	enum class OADState : GF_UINT8 {
+		OAD_STATE_IDLE,
+		OAD_STATE_IDENTIFY,
+		OAD_STATE_SEND_BLOCK,
+		OAD_STATE_SEND_FAST,
+		OAD_STATE_FAILED,
+		OAD_STATE_SUCCESS
+	};
 	class OADSetting :
 		public DeviceSettingHandle
 	{
@@ -44,6 +52,18 @@ namespace gf
 		virtual GF_RET_CODE oadUpgrade(FILE* file, function<void(ResponseResult res, GF_UINT32 percentage)> progress) override;
 		virtual void dispatchResponse(GF_UINT8 command, GF_UINT8 retval, GF_UINT8 length,
 			GF_PUINT8 data, gfsPtr<void> cb, bool timeout = false) override;
+	public:
+		GF_UINT8 mOADPercent;
+		OADState mOADState;
+		FILE* mOADFile;
+		GF_UINT16 mReqNumber;
+		function<void(ResponseResult res, GF_UINT32 percentage)> cb;
+		std::mutex mMutex;
+		std::condition_variable mCond;
+
+	private:
+		static void oadRun();
+		static thread oadThread;
 	};
 
 	class OADProfile :
@@ -54,8 +74,7 @@ namespace gf
 			: DeviceProfile(device) {}
 
 	public:
-		virtual void onData(GF_UINT8 length, GF_PUINT8 data) override;
-		virtual void onResponse(GF_UINT8 length, GF_PUINT8 data) override;
+		virtual void onCharNotify(ProfileCharType type, GF_UINT8 length, GF_PUINT8 data) override;
 		virtual void onDeviceStatus(DeviceConnectionStatus oldStatus, DeviceConnectionStatus newStatus) override;
 		virtual gfsPtr<DeviceSetting> getDeviceSetting() override;
 

@@ -51,6 +51,11 @@ public:
 	 *Notification format: Response status(1 byte) + cmd type(1 byte) + Response parameter(depends on cmd type)*/
 	virtual void onControlResponseReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data) = 0;
 
+	/*Characteristic notify from device that support OAD protocol*/
+	virtual void onOADFailedReceived(GF_UINT16 handle) = 0;
+	virtual void onOADBlockRequestReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data) = 0;
+	virtual void onOADFastRequestReceived(GF_UINT16 handle, GF_UINT8 length, GF_PUINT8 data) = 0;
+	
 	virtual void onComDestory() = 0;
 };
 #endif
